@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- namespace：命名空间，用于隔离sql，还有一个很重要的作用，后面会讲 -->
+<mapper namespace="com.change.mybatis.mapper.UserMapper">
+	<!-- id:statement的id或者叫做sql的id -->
+	<!-- parameterType:声明输入参数的类型 -->
+	<!-- resultType:声明输出结果的类型，应该填写pojo的全路径 -->
+	<!-- #{}:输入参数的占位符，相当于jdbc的？ -->
+	<select id="queryUserById" parameterType = "Integer" resultType = "com.change.mybatis.pojo.User">
+		SELECT * FROM `user` WHERE id  = #{id}
+	</select>
+	<!-- 
+	#{} 占位符
+	${} 字符串拼接 入参只能用“value” SELECT * FROM `user` WHERE username like '%${value}%'
+	 -->
+	<select id="findUserByName" parameterType = "String" resultType="com.change.mybatis.pojo.User">
+		SELECT * FROM `user` WHERE username like '%${value}%'
+	</select>
+	
+	<!-- 添加用户 -->
+	<insert id="insertUser" parameterType = "com.change.mybatis.pojo.User">
+		<selectKey keyProperty="id" resultType = "Integer" order="AFTER">
+			select LAST_INSERT_ID()
+		</selectKey>
+		insert into user (username, birthday,address,sex) values (#{username},#{birthday}, #{address}, #{sex})
+	</insert>
+	
+	<update id="updateUserById" parameterType="com.change.mybatis.pojo.User">
+		update user
+		set username = #{username}, sex = #{sex}, birthday = #{birthday}, address = #{address}
+		where id = #{id}
+	</update>
+	
+	<delete id="deleteUserById" parameterType="int">
+		delete from user
+		where id = #{id}
+	</delete>
+</mapper>
