@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- namespace：命名空间，用于隔离sql，还有一个很重要的作用，后面会讲 -->
+
+<mapper namespace="com.change.mybatis.mapper.UserMapper">
+	<!-- id:statement的id或者叫做sql的id -->
+	<!-- parameterType:声明输入参数的类型 -->
+	<!-- resultType:声明输出结果的类型，应该填写pojo的全路径 -->
+	<!-- #{}:输入参数的占位符，相当于jdbc的？ -->
+	<select id="queryUserById" parameterType = "Integer" resultType = "com.change.mybatis.pojo.User">
+		SELECT * FROM `user` WHERE id  = #{id}
+	</select>
+	<!-- 
+	#{} 占位符
+	${} 字符串拼接 入参只能用“value” SELECT * FROM `user` WHERE username like '%${value}%'
+	 -->
+	<select id="findUserByName" parameterType = "String" resultType="com.change.mybatis.pojo.User">
+		SELECT * FROM `user` WHERE username like '%${value}%'
+	</select>
+	
+	<!-- 添加用户 -->
+	<insert id="insertUser" parameterType = "com.change.mybatis.pojo.User">
+		<selectKey keyProperty="id" resultType = "Integer" order="AFTER">
+			select LAST_INSERT_ID()
+		</selectKey>
+		insert into user (username, birthday,address,sex) values (#{username},#{birthday}, #{address}, #{sex})
+	</insert>
+	
+	<update id="updateUserById" parameterType="com.change.mybatis.pojo.User">
+		update user
+		set username = #{username}, sex = #{sex}, birthday = #{birthday}, address = #{address}
+		where id = #{id}
+	</update>
+	
+	<delete id="deleteUserById" parameterType="int">
+		delete from user
+		where id = #{id}
+	</delete>
+	
+	<!-- 根据用户名模糊查询 -->
+	<select id="queryUserByQueryVo" parameterType = "com.change.mybatis.pojo.QueryVo" resultType="User">
+		select * from user where username like '%${user.username}%'
+	</select>
+	
+	<!-- 查询表的条数 -->
+	<select id="countUserByQueryVo" resultType="Integer">
+		select count(*) from user
+	</select>
+	
+	<!-- 根据性别和名字查询用户 -->
+	<select id="selectUserBySexAndUserName" parameterType="User" resultType = "User">
+		select * from user 
+		<where>
+			<if test="sex != null and sex !=''">
+			sex = #{sex}
+			</if>
+			<if test="username != null and username !=''">
+				and username = #{username}
+			</if>
+		</where>
+	</select>
+	
+	<select id="selectUserByIds" parameterType = "Integer" resultType = "User">
+		select * from user
+		<where>
+			id in
+			<foreach collection = "array" item = "id" open = "(" close =")" separator = ",">
+				#{id}
+			</foreach>
+		</where> 
+	</select>
+	
+	<select id = "selectUserByQueryIds" parameterType = "QueryVo" resultType = "User">
+		select * from user
+		<where>
+			id in
+			<foreach collection = "idsList" item = "id" open = "(" close =")" separator = ",">
+				#{id}
+			</foreach>
+		</where> 
+	</select>
+	
+	<resultMap type="User" id="userOrderResultMap">
+		<id property="id" column="user_id" />
+		<result property="username" column="username" />
+		<result property="address" column="address" />
+	
+		<!-- collection ：配置一对多属性 -->
+		<!-- property:user里面的Orders属性名 -->
+		<!-- javaType:属性类型 -->
+		<collection property="orders" javaType="List" ofType="Orders">
+			<id property="id" column="id" />
+			<result property="userId" column="user_id" />
+			<result property="number" column="number" />
+			<result property="createtime" column="createtime" />
+			<result property="note" column="note" />
+		</collection>
+	
+	</resultMap>
+
+	<!-- 一对多关联，查询用户，用户内部包含订单列表属性 -->
+	<select id="selectByUserAndOrders" resultMap="userOrderResultMap">
+		SELECT
+		o.id,
+		o.user_id,
+		o.number,
+		o.createtime,
+		o.note,
+		u.username,
+		u.address
+		FROM
+		`user` u
+		LEFT JOIN `orders` o ON o.user_id = u.id
+	</select>
+</mapper>
